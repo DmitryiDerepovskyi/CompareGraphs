@@ -56,10 +56,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ConvertToImage.cs" />
     <Compile Include="Element.cs" />
     <Compile Include="IncorrectDataException.cs" />
-    <Compile Include="Path.cs" />
     <Compile Include="Vertex.cs" />
+    <Compile Include="VisualizationOfGraph.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

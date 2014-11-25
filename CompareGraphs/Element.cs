@@ -11,13 +11,8 @@ namespace CompareGraphs
         public Element() { ;}
         public Element(int value)
         {
-            this.value = value;
+            this.Value = value;
         }
-        int value;
-        public int Value
-        {
-            get { return value; }
-            set { this.value = value; }
-        }
+        public int Value { get; set; }
     }
 }

@@ -7,34 +7,32 @@ namespace CompareGraphs
 {
     public class Edge
     {
-        private Vertex VertexStart;
-        private Vertex VertexEnd;
-        private int weight;
-
-        public Edge(Vertex VertexStart, Vertex VertexEnd, int weight)
+      
+        public Edge(Vertex vertexStart, Vertex vertexEnd, int weight)
         {
-            this.VertexStart = VertexStart;
-            this.VertexEnd = VertexEnd;
-            this.weight = weight;
+            this._vertexStart = vertexStart;
+            this._vertexEnd = vertexEnd;
+            this.Weight = weight;
         }
 
-        public Edge(int  Start, int  End, int weight)
+        public Edge(int  start, int  end, int weight)
         {
-            VertexStart = new Vertex(Start);
-            VertexEnd = new Vertex(End);
-            this.weight = weight;
+            _vertexStart = new Vertex(start);
+            _vertexEnd = new Vertex(end);
+            this.Weight = weight;
         }
+        private readonly Vertex _vertexStart;
+        private readonly Vertex _vertexEnd;
+
         public Vertex StartVertex
         {
-            get { return VertexStart; }
+            get { return _vertexStart; }
         }
         public Vertex EndVertex
         {
-            get { return VertexEnd; }
+            get { return _vertexEnd; }
         }
-        public int Weight
-        {
-            get { return weight;}
-        }
+
+        public int Weight { get; set; }
     }
 }

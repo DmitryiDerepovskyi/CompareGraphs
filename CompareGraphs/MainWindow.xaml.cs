@@ -25,6 +25,11 @@ namespace CompareGraphs
     public partial class MainWindow : Window
     {
         ObservableCollection<Element> listFirstP, listFirstG, listSecondP, listSecondG;
+        bool isFirstGraphInput = false, isSecondGraphInput = false;
+        Graph GraphFirst, GraphSecond;
+        Image bgFG = new Image();
+        Image bgSG = new Image();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -145,7 +150,46 @@ namespace CompareGraphs
 
         private void btnCompareGraphs_Click(object sender, RoutedEventArgs e)
         {
+            if(isSecondGraphInput && isFirstGraphInput)
+            {
+                if(GraphFirst == GraphSecond)
+                    MessageBox.Show("Graphs are equivalent");
+                else
+                    MessageBox.Show("Graphs are not equivalent");
+            }
+        }
 
+        private void btnOkFirstGraph_Click(object sender, RoutedEventArgs e)
+        {
+            int[] arrG, arrP;
+            arrG = ConvertObservableToArray(listFirstG);
+            arrP = ConvertObservableToArray(listFirstP);
+            if (arrG.Length == 0)
+            {
+                MessageBox.Show("G is empty!");
+                return;
+            }
+            if (arrP.Length == 0)
+            {
+                MessageBox.Show("P is empty!");
+                return;
+            }
+            try
+            {
+                GraphFirst = new Graph(arrG, arrP);
+                VisualizationOfGraph.PrintGraph(ref csFirstGraph, GraphFirst.GetAdjacencyMatrix());
+                bgFG.Source = ConvertToImage.ToImageSource(csFirstGraph);
+                csFirstGraph.Children.Clear();
+                Canvas.SetLeft(bgFG, 0);
+                Canvas.SetTop(bgFG, 0);
+                csSecondGraph.Children.Add(bgFG);
+                isFirstGraphInput = true;
+            }
+            catch (IncorrectDataException ex)
+            {
+                isSecondGraphInput = false;
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void btnOkSecondGraph_Click(object sender, RoutedEventArgs e)
@@ -153,20 +197,33 @@ namespace CompareGraphs
             int[] arrG, arrP;
             arrG = ConvertObservableToArray(listSecondG);
             arrP = ConvertObservableToArray(listSecondP);
-            Graph GraphSecond;
+            if (arrG.Length == 0)
+            {
+                MessageBox.Show("G is empty!");
+                return;
+            }
+            if (arrP.Length == 0)
+            {
+                MessageBox.Show("P is empty!");
+                return;
+            }
             try
             {
                 GraphSecond = new Graph(arrG, arrP);
+                VisualizationOfGraph.PrintGraph(ref csSecondGraph, GraphSecond.GetAdjacencyMatrix());
+                bgSG.Source = ConvertToImage.ToImageSource(csSecondGraph);
+                csSecondGraph.Children.Clear();
+                Canvas.SetLeft(bgSG, 0);
+                Canvas.SetTop(bgSG, 0);
+                csSecondGraph.Children.Add(bgSG);
+                isSecondGraphInput = true;
             }
             catch(IncorrectDataException ex){
+                isSecondGraphInput = false;
                 MessageBox.Show(ex.Message);
             }
         }
 
-        private void btnOkFirstGraph_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
 
         int[] ConvertObservableToArray(ObservableCollection<Element> list)
         {
@@ -176,9 +233,32 @@ namespace CompareGraphs
             return array;
         }
 
-        public void PrintGraph()
+        private void dgPreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            throw new System.NotImplementedException();
+            if (!Char.IsDigit(e.Text[e.Text.Length - 1]))
+            {
+                //запретить ввод не цифр
+                e.Handled = true;
+            }
         }
+
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            csFirstGraph.Children.Clear();
+            csSecondGraph.Children.Clear();
+            if (csFirstGraph.ActualWidth > csFirstGraph.ActualHeight)
+            {
+                bgFG.Height = bgFG.Width = csFirstGraph.ActualHeight;
+                bgSG.Height = bgSG.Width = csFirstGraph.ActualHeight;
+            }
+            else
+            {
+                bgFG.Height = bgFG.Width = csFirstGraph.ActualWidth;
+                bgSG.Height = bgSG.Width = csFirstGraph.ActualWidth;
+            }
+            csFirstGraph.Children.Add(bgFG);
+            csSecondGraph.Children.Add(bgSG);
+        }
+
     }
 }
