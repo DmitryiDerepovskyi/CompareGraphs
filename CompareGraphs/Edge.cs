@@ -1,25 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace CompareGraphs
+﻿namespace CompareGraphs
 {
     public class Edge
     {
       
         public Edge(Vertex vertexStart, Vertex vertexEnd, int weight)
         {
-            this._vertexStart = vertexStart;
-            this._vertexEnd = vertexEnd;
-            this.Weight = weight;
+            _vertexStart = vertexStart;
+            _vertexEnd = vertexEnd;
+            Weight = weight;
         }
 
         public Edge(int  start, int  end, int weight)
         {
             _vertexStart = new Vertex(start);
             _vertexEnd = new Vertex(end);
-            this.Weight = weight;
+            Weight = weight;
         }
         private readonly Vertex _vertexStart;
         private readonly Vertex _vertexEnd;

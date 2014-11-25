@@ -10,10 +10,7 @@ namespace CompareGraphs
     {
         public override string Message
         {
-            get
-            {
-                return "Incorrect data.";
-            }
+            get{return "Incorrect data.";}
         }
     }
 }

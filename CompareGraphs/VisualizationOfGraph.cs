@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Shapes;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace CompareGraphs
 {
@@ -16,7 +15,11 @@ namespace CompareGraphs
         private static Vertex[] _vertices;
         private static List<Edge> _ribs;
    
-        // нахождение максимального к-ва ребер
+        /// <summary>
+        /// Визуализация графа
+        /// </summary>
+        /// <param name="canvasPaintGraph"></param>
+        /// <param name="adjMatrix"></param>
         public static void PrintGraph(ref Canvas canvasPaintGraph, int[,] adjMatrix)
         {
             canvasPaintGraph.Children.Clear();
@@ -58,7 +61,10 @@ namespace CompareGraphs
                 canvasPaintGraph.Children.Add(textBlock);
             }
         }
-
+        /// <summary>
+        /// Нахождение всех ребер графа
+        /// </summary>
+        /// <param name="adjMatrix"></param>
         private static void Ribs(int[,] adjMatrix)
         {
             _ribs = new List<Edge>();
@@ -93,6 +99,38 @@ namespace CompareGraphs
                 var ver = new Vertex(i+1, x, y);
                 _vertices[i] = ver;
             }
+        }
+        /// <summary>
+        /// Конвертирует содержимое элемента в изображение
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static ImageSource ToImageSource(FrameworkElement obj)
+        {
+            // Save current canvas transform
+            var transform = obj.LayoutTransform;
+            obj.LayoutTransform = null;
+
+            // fix margin offset as well
+            var margin = obj.Margin;
+            obj.Margin = new Thickness(0, 0, margin.Right - margin.Left, margin.Bottom - margin.Top);
+
+            // Get the size of canvas
+            var size = new Size(obj.ActualWidth, obj.ActualHeight);
+
+            // force control to Update
+            obj.Measure(size);
+            obj.Arrange(new Rect(size));
+
+            var bmp = new RenderTargetBitmap(
+                (int)obj.ActualWidth, (int)obj.ActualHeight, 96, 96, PixelFormats.Pbgra32);
+
+            bmp.Render(obj);
+
+            // return values as they were before
+            obj.LayoutTransform = transform;
+            obj.Margin = margin;
+            return bmp;
         }
     }
 }

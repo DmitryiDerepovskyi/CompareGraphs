@@ -1,21 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.Win32;
 using System.IO;
-using System.Collections.Specialized;
 
 namespace CompareGraphs
 {
@@ -24,39 +13,29 @@ namespace CompareGraphs
     /// </summary>
     public partial class MainWindow : Window
     {
-        ObservableCollection<Element> listFirstP, listFirstG, listSecondP, listSecondG;
-        bool isFirstGraphInput = false, isSecondGraphInput = false;
-        Graph GraphFirst, GraphSecond;
-        Image bgFG = new Image();
-        Image bgSG = new Image();
+        ObservableCollection<Element> _listFirstP, _listFirstG, _listSecondP, _listSecondG;
+        bool _isFirstGraphInput = false, _isSecondGraphInput = false;
+        Graph _graphFirst, _graphSecond;
+        Image _imageFG = new Image();
+        Image _imageSG = new Image();
 
         public MainWindow()
         {
             InitializeComponent();
-            listFirstP = new ObservableCollection<Element>();
-            listFirstG = new ObservableCollection<Element>();
-            listSecondP = new ObservableCollection<Element>();
-            listSecondG = new ObservableCollection<Element>();
-            dgFirstGraphG.ItemsSource = listFirstG;
-            dgFirstGraphP.ItemsSource = listFirstP;
-            dgSecondGraphP.ItemsSource = listSecondP;
-            dgSecondGraphG.ItemsSource = listSecondG;
+            _listFirstP = new ObservableCollection<Element>();
+            _listFirstG = new ObservableCollection<Element>();
+            _listSecondP = new ObservableCollection<Element>();
+            _listSecondG = new ObservableCollection<Element>();
+            dgFirstGraphG.ItemsSource = _listFirstG;
+            dgFirstGraphP.ItemsSource = _listFirstP;
+            dgSecondGraphP.ItemsSource = _listSecondP;
+            dgSecondGraphG.ItemsSource = _listSecondG;
         }
 
-        #region InputData
-        private void btnSelectSecondGraphFile_Click(object sender, RoutedEventArgs e)
-        {
-            //получаем имя файла
-            string fname = OpenFile();
-            if (fname.Length != 0)
-            {
-                //вызываем метод для сохранения массива в файл
-                ReadFile(fname, out listSecondG, out listSecondP);
-                dgSecondGraphG.ItemsSource = listSecondG;
-                dgSecondGraphP.ItemsSource = listSecondP;
-            }
-        }
-
+        #region InputData 
+        /// <summary>
+        /// Выбор файла с данными для первого графа
+        /// </summary>
         private void btnSelectFirstGraphFile_Click(object sender, RoutedEventArgs e)
         {
             //получаем имя файла
@@ -64,24 +43,54 @@ namespace CompareGraphs
             if (fname.Length != 0)
             {
                 //вызываем метод для сохранения массива в файл
-                ReadFile(fname,out listFirstG,out listFirstP);
-                dgFirstGraphG.ItemsSource = listFirstG;
-                dgFirstGraphP.ItemsSource = listFirstP;
+                ReadFile(fname,out _listFirstG,out _listFirstP);
+                dgFirstGraphG.ItemsSource = _listFirstG;
+                dgFirstGraphP.ItemsSource = _listFirstP;
             }
         }
-        
-        bool ReadFile(string filename, out ObservableCollection<Element> G, out ObservableCollection<Element> P)
+        /// <summary>
+        /// Выбор файла с данными для второго графа
+        /// </summary>
+        private void btnSelectSecondGraphFile_Click(object sender, RoutedEventArgs e)
         {
-            using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            //получаем имя файла
+            string fname = OpenFile();
+            if (fname.Length != 0)
             {
-                StreamReader sr = new StreamReader(fs);
-                string strG = sr.ReadLine().Trim();
-                string strP = sr.ReadLine().Trim();
-                G = SplitStringToList(strG);
-                P = SplitStringToList(strP);
-            } 
-            return true;
+                //вызываем метод для сохранения массива в файл
+                ReadFile(fname, out _listSecondG, out _listSecondP);
+                dgSecondGraphG.ItemsSource = _listSecondG;
+                dgSecondGraphP.ItemsSource = _listSecondP;
+            }
         }
+        /// <summary>
+        /// Чтение с файла
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="g"></param>
+        /// <param name="p"></param>
+        void ReadFile(string filename, out ObservableCollection<Element> g, out ObservableCollection<Element> p)
+        {
+            try
+            {
+                using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                {
+                    var sr = new StreamReader(fs);
+                    var strG = sr.ReadLine().Trim();
+                    var strP = sr.ReadLine().Trim();
+                    g = SplitStringToList(strG);
+                    p = SplitStringToList(strP);
+                }
+            }
+            catch(Exception e)
+            {
+                g = null;
+                p = null;
+                MessageBox.Show(e.Message);
+            }
+          
+        }
+
         /// <summary>
         /// Разделяем строку на массив чисел
         /// </summary>
@@ -92,13 +101,13 @@ namespace CompareGraphs
             var collection = new ObservableCollection<Element>();
             try
             {
-                string[] split = list.Split(' ');
-                foreach (string s in split)
+                var split = list.Split(' ');
+                foreach (var s in split)
                 {
                     if (s == String.Empty)
                         continue;
                     var elem = new Element();
-                    int num = Int32.Parse(s);
+                    var num = Int32.Parse(s);
                     if (num < 0) 
                         throw new FormatException();
                     elem.Value = num;
@@ -118,7 +127,7 @@ namespace CompareGraphs
         string OpenFile()
         {
             string fname = String.Empty;
-            OpenFileDialog myDialog = new OpenFileDialog();
+            var myDialog = new OpenFileDialog();
             myDialog.Filter = "txt files(*.txt)|*.txt|All files(*.*)|*.*";
             //Проверка существования файла с заданным именем
             myDialog.CheckFileExists = true;
@@ -135,35 +144,46 @@ namespace CompareGraphs
         #endregion
 
         #region ClearDataGrid
-        private void btnClearSecondGraph_Click(object sender, RoutedEventArgs e)
-        {
-            listSecondG.Clear();
-            listSecondP.Clear();
-        }
-
+        /// <summary>
+        /// Очистка содержимого таблицы и панели для первого графа
+        /// </summary>
         private void btnClearFirstGraph_Click(object sender, RoutedEventArgs e)
         {
-            listFirstG.Clear();
-            listFirstP.Clear();
+            csFirstGraph.Children.Clear();
+            _listFirstG.Clear();
+            _listFirstP.Clear();
+        }
+
+       /// <summary>
+       /// Очистка содержимого таблицы и панели для второго графа
+       /// </summary>
+        private void btnClearSecondGraph_Click(object sender, RoutedEventArgs e)
+        {
+            csSecondGraph.Children.Clear();
+            _listSecondG.Clear();
+            _listSecondP.Clear();
         }
         #endregion
-
+        /// <summary>
+        /// Сравнение графов по их харектеристике - живучесть
+        /// </summary>
         private void btnCompareGraphs_Click(object sender, RoutedEventArgs e)
         {
-            if(isSecondGraphInput && isFirstGraphInput)
+            if(_isSecondGraphInput && _isFirstGraphInput)
             {
-                if(GraphFirst == GraphSecond)
+                if(_graphFirst == _graphSecond)
                     MessageBox.Show("Graphs are equivalent");
                 else
                     MessageBox.Show("Graphs are not equivalent");
             }
         }
-
+        /// <summary>
+        /// Подтверждение ввода данных для первого графа
+        /// </summary>
         private void btnOkFirstGraph_Click(object sender, RoutedEventArgs e)
         {
-            int[] arrG, arrP;
-            arrG = ConvertObservableToArray(listFirstG);
-            arrP = ConvertObservableToArray(listFirstP);
+            var arrG = ConvertObservableToArray(_listFirstG);
+            var arrP = ConvertObservableToArray(_listFirstP);
             if (arrG.Length == 0)
             {
                 MessageBox.Show("G is empty!");
@@ -176,27 +196,28 @@ namespace CompareGraphs
             }
             try
             {
-                GraphFirst = new Graph(arrG, arrP);
-                VisualizationOfGraph.PrintGraph(ref csFirstGraph, GraphFirst.GetAdjacencyMatrix());
-                bgFG.Source = ConvertToImage.ToImageSource(csFirstGraph);
+                _graphFirst = new Graph(arrG, arrP);
+                VisualizationOfGraph.PrintGraph(ref csFirstGraph, _graphFirst.GetAdjacencyMatrix());
+                _imageFG.Source = VisualizationOfGraph.ToImageSource(csFirstGraph);
                 csFirstGraph.Children.Clear();
-                Canvas.SetLeft(bgFG, 0);
-                Canvas.SetTop(bgFG, 0);
-                csSecondGraph.Children.Add(bgFG);
-                isFirstGraphInput = true;
+                Canvas.SetLeft(_imageFG, 0);
+                Canvas.SetTop(_imageFG, 0);
+                csFirstGraph.Children.Add(_imageFG);
+                _isFirstGraphInput = true;
             }
             catch (IncorrectDataException ex)
             {
-                isSecondGraphInput = false;
+                _isSecondGraphInput = false;
                 MessageBox.Show(ex.Message);
             }
         }
-
+        /// <summary>
+        /// Подтверждение данный для второго графа
+        /// </summary>
         private void btnOkSecondGraph_Click(object sender, RoutedEventArgs e)
         {
-            int[] arrG, arrP;
-            arrG = ConvertObservableToArray(listSecondG);
-            arrP = ConvertObservableToArray(listSecondP);
+            var arrG = ConvertObservableToArray(_listSecondG);
+            var arrP = ConvertObservableToArray(_listSecondP);
             if (arrG.Length == 0)
             {
                 MessageBox.Show("G is empty!");
@@ -209,31 +230,39 @@ namespace CompareGraphs
             }
             try
             {
-                GraphSecond = new Graph(arrG, arrP);
-                VisualizationOfGraph.PrintGraph(ref csSecondGraph, GraphSecond.GetAdjacencyMatrix());
-                bgSG.Source = ConvertToImage.ToImageSource(csSecondGraph);
+                _graphSecond = new Graph(arrG, arrP);
+                VisualizationOfGraph.PrintGraph(ref csSecondGraph, _graphSecond.GetAdjacencyMatrix());
+                _imageSG.Source = VisualizationOfGraph.ToImageSource(csSecondGraph);
                 csSecondGraph.Children.Clear();
-                Canvas.SetLeft(bgSG, 0);
-                Canvas.SetTop(bgSG, 0);
-                csSecondGraph.Children.Add(bgSG);
-                isSecondGraphInput = true;
+                Canvas.SetLeft(_imageSG, 0);
+                Canvas.SetTop(_imageSG, 0);
+                csSecondGraph.Children.Add(_imageSG);
+                _isSecondGraphInput = true;
             }
             catch(IncorrectDataException ex){
-                isSecondGraphInput = false;
+                _isSecondGraphInput = false;
                 MessageBox.Show(ex.Message);
             }
         }
 
-
+        /// <summary>
+        /// Конвертирование List<Element> в int[] по свойству Value 
+        /// </summary>
+        /// <param name="list"></param>
+        /// <returns></returns>
         int[] ConvertObservableToArray(ObservableCollection<Element> list)
         {
-            int[] array = new int[list.Count];
-            for (int i = 0; i < list.Count; i++)
+            var array = new int[list.Count];
+            for (var i = 0; i < list.Count; i++)
                 array[i] = list[i].Value;
             return array;
         }
-
-        private void dgPreviewTextInput(object sender, TextCompositionEventArgs e)
+        /// <summary>
+        /// Обработка вводимого текста в ячейки таблицы
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DgPreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (!Char.IsDigit(e.Text[e.Text.Length - 1]))
             {
@@ -241,23 +270,27 @@ namespace CompareGraphs
                 e.Handled = true;
             }
         }
-
+        /// <summary>
+        /// Изменение размера изображения 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             csFirstGraph.Children.Clear();
             csSecondGraph.Children.Clear();
             if (csFirstGraph.ActualWidth > csFirstGraph.ActualHeight)
             {
-                bgFG.Height = bgFG.Width = csFirstGraph.ActualHeight;
-                bgSG.Height = bgSG.Width = csFirstGraph.ActualHeight;
+                _imageFG.Height = _imageFG.Width = csFirstGraph.ActualHeight;
+                _imageSG.Height = _imageSG.Width = csFirstGraph.ActualHeight;
             }
             else
             {
-                bgFG.Height = bgFG.Width = csFirstGraph.ActualWidth;
-                bgSG.Height = bgSG.Width = csFirstGraph.ActualWidth;
+                _imageFG.Height = _imageFG.Width = csFirstGraph.ActualWidth;
+                _imageSG.Height = _imageSG.Width = csFirstGraph.ActualWidth;
             }
-            csFirstGraph.Children.Add(bgFG);
-            csSecondGraph.Children.Add(bgSG);
+            csFirstGraph.Children.Add(_imageFG);
+            csSecondGraph.Children.Add(_imageSG);
         }
 
     }

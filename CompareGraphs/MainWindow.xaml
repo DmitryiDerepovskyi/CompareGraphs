@@ -44,26 +44,26 @@
         <Canvas x:Name = "csSecondGraph" Margin = "10" Grid.Row = "1" Grid.Column = "7" Grid.ColumnSpan="3" Background="#FFCC99"/>
         
         
-        <DataGrid x:Name="dgFirstGraphG" Margin="10,10,0,10" Grid.Row = "1" Grid.Column= "3" PreviewTextInput="dgPreviewTextInput"
+        <DataGrid x:Name="dgFirstGraphG" Margin="10,10,0,10" Grid.Row = "1" Grid.Column= "3" PreviewTextInput="DgPreviewTextInput"
 			AutoGenerateColumns="false" HeadersVisibility="Column" CanUserAddRows="True" CanUserSortColumns="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="G" MinWidth="46" Binding="{Binding Value}"/>
             </DataGrid.Columns>
         </DataGrid>
-        <DataGrid x:Name="dgFirstGraphP" Margin="0,10,10,10" Grid.Row = "1" Grid.Column= "4"  PreviewTextInput="dgPreviewTextInput"
+        <DataGrid x:Name="dgFirstGraphP" Margin="0,10,10,10" Grid.Row = "1" Grid.Column= "4"  PreviewTextInput="DgPreviewTextInput"
 			AutoGenerateColumns="false" HeadersVisibility="Column" CanUserAddRows="True" CanUserSortColumns="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="P" MinWidth="46" Binding="{Binding Value}"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <DataGrid x:Name="dgSecondGraphG" Margin="10,10,0,10" Grid.Row = "1" Grid.Column= "5"  PreviewTextInput="dgPreviewTextInput"
+        <DataGrid x:Name="dgSecondGraphG" Margin="10,10,0,10" Grid.Row = "1" Grid.Column= "5"  PreviewTextInput="DgPreviewTextInput"
 			AutoGenerateColumns="false" HeadersVisibility="Column" CanUserAddRows="True" CanUserSortColumns="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="G" MinWidth="46" Binding="{Binding Value}"/>
             </DataGrid.Columns>
         </DataGrid>
-        <DataGrid x:Name="dgSecondGraphP" Margin="0,10,10,10" Grid.Row = "1" Grid.Column= "6"  PreviewTextInput="dgPreviewTextInput"
+        <DataGrid x:Name="dgSecondGraphP" Margin="0,10,10,10" Grid.Row = "1" Grid.Column= "6"  PreviewTextInput="DgPreviewTextInput"
 			AutoGenerateColumns="false" HeadersVisibility="Column" CanUserAddRows="True" CanUserSortColumns="False" EnableRowVirtualization="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="P" MinWidth="46" Binding="{Binding Path = Value}"/>

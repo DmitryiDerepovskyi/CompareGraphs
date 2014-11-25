@@ -1,27 +1,23 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace CompareGraphs
 {
     internal class Graph
     {
-
         private readonly int[] _g;
         private readonly int[] _p;
         private readonly int[,] _adjacencyMatrix;
         private int _vitality;
         private readonly int _numberOfVertex;
-        private List<List<int>> allPathBetweenToVertex;
         public Graph(int[] g, int[] p)
         {
             _g = g;
             _p = p;
             _adjacencyMatrix = ConvertMFItoAdjacencyMatrix(_g, _p);
             _numberOfVertex = p.Length;
-            if (isCorrectData(g, p))
+            if (IsCorrectData(g, p))
             {
                 FindVitality();
             }
@@ -36,9 +32,9 @@ namespace CompareGraphs
         /// <param name="g"></param>
         /// <param name="p"></param>
         /// <returns></returns>
-        public bool isCorrectData(int[] g, int[] p)
+        public bool IsCorrectData(int[] g, int[] p)
         {
-            var isCorrect = true;
+            bool isCorrect;
             if (p.Length >= 20)
                 isCorrect = false;
             if (p[p.Length - 1] >= 50)
@@ -56,7 +52,6 @@ namespace CompareGraphs
             isCorrect = IsGraphConnected();
             return isCorrect;
         }
-
         /// <summary>
         /// Метод выполняет проверку графа на связность
         /// </summary>
@@ -68,9 +63,8 @@ namespace CompareGraphs
             CheckVertexForConnection(0, ref markedVertexes);
             return !markedVertexes.Contains(false);
         }
-
         /// <summary>
-        /// Метод проходит по всем вершинам, связанным с посланной вершиной node и помечает их.
+        /// Метод проходит по всем вершинам, связанным с посланной вершиной vertex и помечает их.
         /// </summary>
         /// <param name="vertex"></param>
         /// <param name="markedVertexes"></param>
@@ -85,13 +79,11 @@ namespace CompareGraphs
                 CheckVertexForConnection(i, ref markedVertexes);
             }
         }
-
 #region methodsGet
         /// <summary>
         /// Возвращает живучесть графа
         /// </summary>
         /// <returns></returns>
-    
         public int GetVitality()
         {
             return _vitality;
@@ -122,58 +114,76 @@ namespace CompareGraphs
             return _adjacencyMatrix;
         }
 #endregion
-
-       
+        private List<List<int>> _allPathBetweenToVertexs;
+        /// <summary>
+        /// Нахождение живучести
+        /// </summary>
+        /// <returns></returns>
+        private void FindVitality()
+        {
+            // находим кратчайшие пути между всеми вершинами
+            var w = AlgoFloydWarshall();
+            var diameters = FindDiameters(w);
+            var vitalities = new int[diameters.Count];
+            for (var i = 0; i < diameters.Count; i++)
+            {
+                _allPathBetweenToVertexs = FindAllPath(diameters[i]);
+                var buffer = FindVitalityForThisDiameter();
+                vitalities[i] = buffer;
+            }
+            _vitality = vitalities.Max();
+            _vitality = _vitality == 0 ? _p.Count() - 1 : _vitality;
+        }
         /// <summary>
         /// Нахождения кратчайших путей между всеми парами вершин
         /// </summary>
         /// <returns></returns>
         private int[,] AlgoFloydWarshall()
         {
-            var W = new int[_numberOfVertex, _numberOfVertex];
+            var w = new int[_numberOfVertex, _numberOfVertex];
             for(var i = 0; i < _numberOfVertex; i++)
             {
                 for (var j = 0; j < _numberOfVertex; j++)
                 {
                     if (_adjacencyMatrix[i, j] == 0)
-                        W[i, j] = Int32.MaxValue;
+                        w[i, j] = Int32.MaxValue;
                     else
-                        W[i, j] = _adjacencyMatrix[i, j];
+                        w[i, j] = _adjacencyMatrix[i, j];
                 }
             }
             for (var k = 0; k < _numberOfVertex; k++)
                 for (var i = 0; i < _numberOfVertex; i++)
                     for (var j = 0; j < _numberOfVertex; j++)
-                        if (W[i,k] < Int32.MaxValue && W[k,j] < Int32.MaxValue)
-                            if (W[i,k] + W[k,j] < W[i,j])
-                                W[i,j] = W[i,k] + W[k,j];
+                        if (w[i,k] < Int32.MaxValue && w[k,j] < Int32.MaxValue)
+                            if (w[i,k] + w[k,j] < w[i,j])
+                                w[i,j] = w[i,k] + w[k,j];
 
-            return W;
+            return w;
         }
-
         /// <summary>
         /// Находим все возможные диаметры графа
         /// </summary>
-        /// <param name="W">Матрица с кратчайшими путями между всеми парами вершин/param>
+        /// <param name="w"></param>
+        /// Матрица с кратчайшими путями между всеми парами вершин/param>
         /// <returns></returns>
-        private List<Edge> FindDiameters(int[,] W)
+        private List<Edge> FindDiameters(int[,] w)
         {
             // список хранящий длинейшие пути среди кратчайших
             var diameters = new List<Edge>();
-            diameters.Add(new Edge(0, 1, W[0, 1]));
+            diameters.Add(new Edge(0, 1, w[0, 1]));
             // находим все максимальные кратчайшие пути
             for (var i = 0; i < _numberOfVertex; i++)
             {
                 for (var j = i + 1; j < _numberOfVertex; j++)
                 {
-                    if (diameters.Last().Weight > W[i, j])
+                    if (diameters.Last().Weight > w[i, j])
                         continue;
-                    else if (diameters.Last().Weight == W[i, j])
-                        diameters.Add(new Edge(i, j, W[i, j]));
+                    else if (diameters.Last().Weight == w[i, j])
+                        diameters.Add(new Edge(i, j, w[i, j]));
                     else
                     {
                         diameters.Clear();
-                        diameters.Add(new Edge(i, j, W[i, j]));
+                        diameters.Add(new Edge(i, j, w[i, j]));
                     }
                 }
             }
@@ -224,17 +234,16 @@ namespace CompareGraphs
                 currentPath.RemoveAt(currentPath.Count - 1);
                 if(currentPath.Count == 0)
                     break;
-                RemoveVisitedVertexs(visitedVertexs);
+                RemoveVisitedVertexes(visitedVertexs);
             }
       
             return allPath;
         }
-
         /// <summary>
         /// Удаляем посещенные вершины
         /// </summary>
         /// <param name="visitedVertexs"></param>
-        private void RemoveVisitedVertexs(IList<int> visitedVertexs)
+        private void RemoveVisitedVertexes(IList<int> visitedVertexs)
         {
             for (var i = visitedVertexs.Count - 1; ; i--)
             {
@@ -247,41 +256,23 @@ namespace CompareGraphs
                     visitedVertexs.RemoveAt(i);
             }
         }
-        /// <summary>
-        /// Нахождение живучести
-        /// </summary>
-        /// <returns></returns>
-        private void FindVitality()
-        {
-            // находим кратчайшие пути между всеми вершинами
-            var W = AlgoFloydWarshall();
-            var diameters = FindDiameters(W);
-            var vitalities = new int[diameters.Count];
-            for (var i = 0; i < diameters.Count; i++)
-            {
-                allPathBetweenToVertex = FindAllPath(diameters[i]);
-                var buffer = FindVitalityForThisDiameter();
-                vitalities[i] = buffer;
-            }
-            _vitality = vitalities.Max();
-            _vitality = _vitality == 0 ? _p.Count() - 1 : _vitality;
-            return;
-        }
-       
+      
+        // Словарь соответствия вершина - в каких диаметрах содержится 
         Dictionary<int, List<int>> diameterVertex = new Dictionary<int, List<int>>();
+        // Словарь соответствия вершина - в каких путях содержится 
         Dictionary<int, List<int>> otherVertex = new Dictionary<int, List<int>>();
         private int FindVitalityForThisDiameter()
         {
             diameterVertex.Clear();
             otherVertex.Clear();
             var vitality = 0;
-            allPathBetweenToVertex.Sort((l1, l2) => l1.Count.CompareTo(l2.Count));
+            _allPathBetweenToVertexs.Sort((l1, l2) => l1.Count.CompareTo(l2.Count));
 
-            var diameter = allPathBetweenToVertex[0].Count;
+            var diameter = _allPathBetweenToVertexs[0].Count;
             var pathsLongerDiameter = 0;
-            for(var i = 0; i < allPathBetweenToVertex.Count; i++)
+            for(var i = 0; i < _allPathBetweenToVertexs.Count; i++)
             {
-                if(allPathBetweenToVertex[i].Count > diameter)
+                if(_allPathBetweenToVertexs[i].Count > diameter)
                 {
                     pathsLongerDiameter = i;
                     break;
@@ -293,16 +284,16 @@ namespace CompareGraphs
             for (var i = 0; i < pathsLongerDiameter; i++)
             {
                 // перебираем все вершины диаметра
-                for(var v = 1; v < allPathBetweenToVertex[i].Count - 1; v++)
+                for(var v = 1; v < _allPathBetweenToVertexs[i].Count - 1; v++)
                 {
                     // ищем эту вершину в других путях, больше чем диаметр
-                    for (var j = pathsLongerDiameter; j < allPathBetweenToVertex.Count; j++)
+                    for (var j = pathsLongerDiameter; j < _allPathBetweenToVertexs.Count; j++)
                     {
-                        var vertex = allPathBetweenToVertex[i][v];
+                        var vertex = _allPathBetweenToVertexs[i][v];
                         if (!diameterVertex.ContainsKey(vertex))
                             diameterVertex.Add(vertex, new List<int>());
                         diameterVertex[vertex].Add(i);
-                        if (allPathBetweenToVertex[j].IndexOf(vertex) != -1)
+                        if (_allPathBetweenToVertexs[j].IndexOf(vertex) != -1)
                         {
                             if (!otherVertex.ContainsKey(vertex))
                                 otherVertex.Add(vertex, new List<int>());
@@ -315,41 +306,50 @@ namespace CompareGraphs
                 return vitality;
             return SetCoverProblem(pathsLongerDiameter);
         }
-
-        private int SetCoverProblem(int PathsLongerDiameter)
+        /// <summary>
+        /// Задача о покрытии
+        /// </summary>
+        /// <param name="pathsLongerDiameter"></param>
+        /// <returns></returns>
+        private int SetCoverProblem(int pathsLongerDiameter)
         {
             var multiplicity = new List<int>();
             var keys = new List<int>(diameterVertex.Keys);
             var numberVertex = 0;
-            for (var size = 1; size <= PathsLongerDiameter; size++)
+            for (var size = 1; size <= pathsLongerDiameter; size++)
             {
-                numberVertex = Func(multiplicity, keys, size, PathsLongerDiameter);
+                numberVertex = RemoveVerticesToIncreaseDiameter(multiplicity, keys, size, pathsLongerDiameter);
                 if (numberVertex != 0)
                     break;
             }
             return numberVertex;
         }
-
-        private int Func(List<int> multiplicity, List<int> keys, int size, int PathsLongerDiameter)
+        /// <summary>
+        /// Определяем какие вершины нужно удалить для увеличения диаметра
+        /// </summary>
+        /// <param name="multiplicity"></param>
+        /// <param name="keys"></param>
+        /// <param name="size"></param>
+        /// <param name="pathsLongerDiameter"></param>
+        /// <returns></returns>
+        private int RemoveVerticesToIncreaseDiameter(IList<int> multiplicity, IList<int> keys, int size, int pathsLongerDiameter)
         {
             if (multiplicity.Count == size)
                 return 0;
-            for (var i = 0; i < keys.Count; i++)
-            {
+            for (var i = 0; i < keys.Count; i++){
                 if (multiplicity.IndexOf(keys[i]) == -1)
                     multiplicity.Add(keys[i]);
                 else
                     continue;
-                if (multiplicity.Count == size)
-                {
-                    if (Checked(multiplicity, PathsLongerDiameter))
+                if (multiplicity.Count == size){
+                    if (Checked(multiplicity, pathsLongerDiameter))
                         return size;
                     else
                         multiplicity.RemoveAt(multiplicity.Count - 1);
                 }
                 else
                 {
-                    var result = Func(multiplicity, keys, size, PathsLongerDiameter);
+                    var result = RemoveVerticesToIncreaseDiameter(multiplicity, keys, size, pathsLongerDiameter);
                     if (result == 0)
                         multiplicity.Remove(multiplicity.Count - 1);
                     else
@@ -358,7 +358,12 @@ namespace CompareGraphs
             }
             return 0;
         }
-
+        /// <summary>
+        /// Проверяем, возможно ли удалить вершину
+        /// </summary>
+        /// <param name="multiplicity"></param>
+        /// <param name="pathsLongerDiameter"></param>
+        /// <returns></returns>
         private bool Checked(IEnumerable<int> multiplicity, int pathsLongerDiameter)
         {
             var isSet = false;
@@ -373,7 +378,7 @@ namespace CompareGraphs
             generalDiameter = generalDiameter.Distinct().ToList();
             generalOther = generalOther.Distinct().ToList();
             if (generalDiameter.Count == pathsLongerDiameter)
-                if(generalOther.Count < allPathBetweenToVertex.Count - pathsLongerDiameter)
+                if(generalOther.Count < _allPathBetweenToVertexs.Count - pathsLongerDiameter)
                     isSet = true;
             return isSet;
         }
@@ -384,35 +389,40 @@ namespace CompareGraphs
         /// <returns>Возвращает матрицу смежности</returns>
         private int[,] ConvertMFItoAdjacencyMatrix(IList<int> g,IList<int> p)
         {
-            var minNumberVertex = g.Min();
-            var maxNumberVertex = g.Max();
-            var AdjMatrix = new int[p.Count,p.Count];
+            var adjMatrix = new int[p.Count,p.Count];
             for (int countP = 0, countG = 0; countP < p.Count; countP++)
             {
                 for (; countG < p[countP]; countG++)
                 {
                     //граф неориентированный - матрица симметрична
-                    AdjMatrix[countP, g[countG]-1] = AdjMatrix[g[countG]-1,countP] = 1;
+                    adjMatrix[countP, g[countG]-1] = adjMatrix[g[countG]-1,countP] = 1;
                 }
             }
-            return AdjMatrix;
+            return adjMatrix;
         }
 
+        public override bool Equals(object obj)
+        {
+            if(obj == null)
+                return false;
+            var p = obj as Graph;
+            if(p == null)
+                return false;
+            return _vitality == p.GetVitality();
+        }
+
+        public override int GetHashCode()
+        {
+            return _numberOfVertex;
+        }
         public static bool operator== (Graph obj1, Graph obj2)
         {
-            return obj2 != null && (obj1 != null && obj1.GetVitality() == obj2.GetVitality());
+            return obj1.GetVitality() == obj2.GetVitality();
         }
         public static bool operator!= (Graph obj1, Graph obj2)
         {
-            return obj2 != null && (obj1 != null && obj1.GetVitality() != obj2.GetVitality());
+            return obj1.GetVitality() != obj2.GetVitality();
         }
-        public override bool Equals(object obj)
-        {
-            var graphObj = obj as Graph;
-            if (graphObj != null)
-                return _vitality.Equals(graphObj.GetVitality());
-            else
-                return false;
-        }
+       
     }
 }
