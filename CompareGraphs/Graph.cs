@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 
 namespace CompareGraphs
 {
@@ -13,61 +14,60 @@ namespace CompareGraphs
         private readonly int _numberOfVertex;
         public Graph(int[] g, int[] p)
         {
-            _g = g;
-            _p = p;
-            _adjacencyMatrix = ConvertMFItoAdjacencyMatrix(_g, _p);
-            _numberOfVertex = p.Length;
-            if (IsCorrectData(g, p))
+            try
             {
+                IsCorrectData(g, p);
+                _g = g;
+                _p = p;
+                _adjacencyMatrix = ConvertMFItoAdjacencyMatrix(_g, _p);
+                _numberOfVertex = p.Length;
+                IsGraphConnected();
                 FindVitality();
             }
-            else
+            catch (Exception)
             {
-                throw new IncorrectDataException();
+                throw;
             }
+
         }
         /// <summary>
         /// Проверка на корректность данных
         /// </summary>
-        /// <param name="g"></param>
-        /// <param name="p"></param>
-        /// <returns></returns>
-        public bool IsCorrectData(int[] g, int[] p)
+        public void IsCorrectData(int[] g, int[] p)
         {
-            bool isCorrect;
-            if (p.Length >= 20)
-                isCorrect = false;
-            if (p[p.Length - 1] >= 50)
-                isCorrect = false;
-            foreach (var i in g)
-                if (i > p.Length)
-                    isCorrect = false;
+            if (p.Length > 20)
+            {
+                throw new IncorrectDataException("Error!!! Number of vertices > 20");
+            }
+            if (p[p.Length - 1] > 50)
+            {
+                throw new IncorrectDataException("Error!!! Number of ribs > 50");
+            }
+            foreach (var i in g.Where(i => i > p.Length))
+                throw new IncorrectDataException(String.Format("Error!!! Number of vertice {0} can't more than {1}",i,p.Length));
             for (int i = 0, n = 0; i < p.Length; i++)
             {
-                if (p[i] < n || p[i] > g.Length)
-                    isCorrect = false;
-                else
-                    n = p[i];
+                if (p[i] <= n || p[i] > g.Length)
+                {
+                    throw new IncorrectDataException("Error!!! Incorrect data in massive P");
+                }
+                n = p[i];
             }
-            isCorrect = IsGraphConnected();
-            return isCorrect;
         }
         /// <summary>
         /// Метод выполняет проверку графа на связность
         /// </summary>
-        /// <returns></returns>
-        private bool IsGraphConnected()
+        private void IsGraphConnected()
         {
             var markedVertexes = new bool[_numberOfVertex];
             markedVertexes[0] = true;
             CheckVertexForConnection(0, ref markedVertexes);
-            return !markedVertexes.Contains(false);
+            if(markedVertexes.Contains(false))
+                throw new IncorrectDataException("Error!!! Graph isn't connected");
         }
         /// <summary>
         /// Метод проходит по всем вершинам, связанным с посланной вершиной vertex и помечает их.
         /// </summary>
-        /// <param name="vertex"></param>
-        /// <param name="markedVertexes"></param>
         private void CheckVertexForConnection(int vertex, ref bool[] markedVertexes)
         {
             if (!markedVertexes.Contains(false)) return;
@@ -79,6 +79,23 @@ namespace CompareGraphs
                 CheckVertexForConnection(i, ref markedVertexes);
             }
         }
+
+        /// Преобразовывает MFI-представления в матрицу смежности.
+        private int[,] ConvertMFItoAdjacencyMatrix(IList<int> g, IList<int> p)
+        {
+            var adjMatrix = new int[p.Count, p.Count];
+            for (int countP = 0, countG = 0; countP < p.Count; countP++)
+            {
+                for (; countG < p[countP]; countG++)
+                {
+                    //граф неориентированный - матрица симметрична
+                    adjMatrix[countP, g[countG] - 1] = adjMatrix[g[countG] - 1, countP] = 1;
+                }
+            }
+            return adjMatrix;
+        }
+
+
 #region methodsGet
         /// <summary>
         /// Возвращает живучесть графа
@@ -118,7 +135,6 @@ namespace CompareGraphs
         /// <summary>
         /// Нахождение живучести
         /// </summary>
-        /// <returns></returns>
         private void FindVitality()
         {
             // находим кратчайшие пути между всеми вершинами
@@ -137,7 +153,6 @@ namespace CompareGraphs
         /// <summary>
         /// Нахождения кратчайших путей между всеми парами вершин
         /// </summary>
-        /// <returns></returns>
         private int[,] AlgoFloydWarshall()
         {
             var w = new int[_numberOfVertex, _numberOfVertex];
@@ -163,8 +178,7 @@ namespace CompareGraphs
         /// <summary>
         /// Находим все возможные диаметры графа
         /// </summary>
-        /// <param name="w"></param>
-        /// Матрица с кратчайшими путями между всеми парами вершин/param>
+        /// <param name="w">Матрица с кратчайшими путями между всеми парами вершин</param>
         /// <returns></returns>
         private List<Edge> FindDiameters(int[,] w)
         {
@@ -192,8 +206,6 @@ namespace CompareGraphs
         /// <summary>
         /// Нахожденит все пути, которые параллельны живучести для определенного диаметра
         /// </summary>
-        /// <param name="diameter"></param>
-        /// <returns></returns>
         private List<List<int>> FindAllPath(Edge diameter)
         {
             var currentPath = new List<int>();
@@ -209,26 +221,22 @@ namespace CompareGraphs
                 {
                     if (_adjacencyMatrix[i, j] == 0)
                         continue;
-                    else
+                    if (visitedVertexs.IndexOf(j) == -1 && currentPath.IndexOf(j) == -1)
                     {
-                        if (visitedVertexs.IndexOf(j) == -1 && currentPath.IndexOf(j) == -1)
+                        currentPath.Add(j);
+                        visitedVertexs.Add(j);
+                        if (j == diameter.EndVertex.Number)
                         {
-                            currentPath.Add(j);
-                            visitedVertexs.Add(j);
-                            if (j == diameter.EndVertex.Number)
-                            {
-                                var list = new List<int>(currentPath);
-                                allPath.Add(list);
-                                currentPath.RemoveAt(currentPath.Count - 1);
-                            }
-                            else
-                            {
-                                visitedVertexs.Add(-1);
-                                i = j;
-                                j = -1;
-                            }
+                            var list = new List<int>(currentPath);
+                            allPath.Add(list);
+                            currentPath.RemoveAt(currentPath.Count - 1);
                         }
-                       
+                        else
+                        {
+                            visitedVertexs.Add(-1);
+                            i = j;
+                            j = -1;
+                        }
                     }
                 }
                 currentPath.RemoveAt(currentPath.Count - 1);
@@ -252,8 +260,7 @@ namespace CompareGraphs
                     visitedVertexs.RemoveAt(i);
                     break;
                 }
-                else
-                    visitedVertexs.RemoveAt(i);
+                visitedVertexs.RemoveAt(i);
             }
         }
       
@@ -309,8 +316,6 @@ namespace CompareGraphs
         /// <summary>
         /// Задача о покрытии
         /// </summary>
-        /// <param name="pathsLongerDiameter"></param>
-        /// <returns></returns>
         private int SetCoverProblem(int pathsLongerDiameter)
         {
             var multiplicity = new List<int>();
@@ -327,11 +332,6 @@ namespace CompareGraphs
         /// <summary>
         /// Определяем какие вершины нужно удалить для увеличения диаметра
         /// </summary>
-        /// <param name="multiplicity"></param>
-        /// <param name="keys"></param>
-        /// <param name="size"></param>
-        /// <param name="pathsLongerDiameter"></param>
-        /// <returns></returns>
         private int RemoveVerticesToIncreaseDiameter(IList<int> multiplicity, IList<int> keys, int size, int pathsLongerDiameter)
         {
             if (multiplicity.Count == size)
@@ -341,11 +341,11 @@ namespace CompareGraphs
                     multiplicity.Add(keys[i]);
                 else
                     continue;
-                if (multiplicity.Count == size){
+                if (multiplicity.Count == size)
+                {
                     if (Checked(multiplicity, pathsLongerDiameter))
                         return size;
-                    else
-                        multiplicity.RemoveAt(multiplicity.Count - 1);
+                    multiplicity.RemoveAt(multiplicity.Count - 1);
                 }
                 else
                 {
@@ -361,9 +361,6 @@ namespace CompareGraphs
         /// <summary>
         /// Проверяем, возможно ли удалить вершину
         /// </summary>
-        /// <param name="multiplicity"></param>
-        /// <param name="pathsLongerDiameter"></param>
-        /// <returns></returns>
         private bool Checked(IEnumerable<int> multiplicity, int pathsLongerDiameter)
         {
             var isSet = false;
@@ -383,24 +380,7 @@ namespace CompareGraphs
             return isSet;
         }
 
-        /// <summary>
-        /// Преобразовывает MFI-представления в матрицу смежности.
-        /// </summary>
-        /// <returns>Возвращает матрицу смежности</returns>
-        private int[,] ConvertMFItoAdjacencyMatrix(IList<int> g,IList<int> p)
-        {
-            var adjMatrix = new int[p.Count,p.Count];
-            for (int countP = 0, countG = 0; countP < p.Count; countP++)
-            {
-                for (; countG < p[countP]; countG++)
-                {
-                    //граф неориентированный - матрица симметрична
-                    adjMatrix[countP, g[countG]-1] = adjMatrix[g[countG]-1,countP] = 1;
-                }
-            }
-            return adjMatrix;
-        }
-
+ 
         public override bool Equals(object obj)
         {
             if(obj == null)

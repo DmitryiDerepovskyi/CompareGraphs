@@ -5,16 +5,15 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
 using System.IO;
+using System.Globalization;
 
 namespace CompareGraphs
 {
-    /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         ObservableCollection<Element> _listFirstP, _listFirstG, _listSecondP, _listSecondG;
-        bool _isFirstGraphInput = false, _isSecondGraphInput = false;
+        bool _isFirstGraphInput, _isSecondGraphInput;
         Graph _graphFirst, _graphSecond;
         Image _imageFG = new Image();
         Image _imageSG = new Image();
@@ -33,9 +32,7 @@ namespace CompareGraphs
         }
 
         #region InputData 
-        /// <summary>
         /// Выбор файла с данными для первого графа
-        /// </summary>
         private void btnSelectFirstGraphFile_Click(object sender, RoutedEventArgs e)
         {
             //получаем имя файла
@@ -48,9 +45,7 @@ namespace CompareGraphs
                 dgFirstGraphP.ItemsSource = _listFirstP;
             }
         }
-        /// <summary>
         /// Выбор файла с данными для второго графа
-        /// </summary>
         private void btnSelectSecondGraphFile_Click(object sender, RoutedEventArgs e)
         {
             //получаем имя файла
@@ -63,12 +58,7 @@ namespace CompareGraphs
                 dgSecondGraphP.ItemsSource = _listSecondP;
             }
         }
-        /// <summary>
         /// Чтение с файла
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <param name="g"></param>
-        /// <param name="p"></param>
         void ReadFile(string filename, out ObservableCollection<Element> g, out ObservableCollection<Element> p)
         {
             try
@@ -82,55 +72,46 @@ namespace CompareGraphs
                     p = SplitStringToList(strP);
                 }
             }
-            catch(Exception e)
+            catch(Exception)
             {
                 g = null;
                 p = null;
-                MessageBox.Show(e.Message);
+                MessageBox.Show("Invalid data in the file");
             }
           
         }
 
-        /// <summary>
         /// Разделяем строку на массив чисел
-        /// </summary>
-        /// <param name="list"></param>
-        /// <returns></returns>
-        ObservableCollection<Element> SplitStringToList(string list)
+        private ObservableCollection<Element> SplitStringToList(string list)
         {
             var collection = new ObservableCollection<Element>();
-            try
+            var split = list.Split(' ');
+            foreach (var s in split)
             {
-                var split = list.Split(' ');
-                foreach (var s in split)
+                if (s == String.Empty)
+                    continue;
+                var elem = new Element();
+                var num = Int32.Parse(s);
+                if (num < 0)
                 {
-                    if (s == String.Empty)
-                        continue;
-                    var elem = new Element();
-                    var num = Int32.Parse(s);
-                    if (num < 0) 
-                        throw new FormatException();
-                    elem.Value = num;
-                    collection.Add(elem);
+                    throw new FormatException();
                 }
-            }
-            catch (FormatException)
-            {
-                MessageBox.Show("Error!!! File include incorrect data.");
+                elem.Value = num;
+                collection.Add(elem);
             }
             return collection;
         }
-        /// <summary>
+
         /// Выбор файла с данными 
-        /// </summary>
-        /// <returns></returns>
         string OpenFile()
         {
-            string fname = String.Empty;
-            var myDialog = new OpenFileDialog();
-            myDialog.Filter = "txt files(*.txt)|*.txt|All files(*.*)|*.*";
+            var fname = String.Empty;
+            var myDialog = new OpenFileDialog
+            {
+                Filter = "txt files(*.txt)|*.txt|All files(*.*)|*.*",
+                CheckFileExists = true
+            };
             //Проверка существования файла с заданным именем
-            myDialog.CheckFileExists = true;
             if (myDialog.ShowDialog() == true)
             {
                 fname = myDialog.FileName;
@@ -144,9 +125,7 @@ namespace CompareGraphs
         #endregion
 
         #region ClearDataGrid
-        /// <summary>
         /// Очистка содержимого таблицы и панели для первого графа
-        /// </summary>
         private void btnClearFirstGraph_Click(object sender, RoutedEventArgs e)
         {
             csFirstGraph.Children.Clear();
@@ -154,9 +133,7 @@ namespace CompareGraphs
             _listFirstP.Clear();
         }
 
-       /// <summary>
        /// Очистка содержимого таблицы и панели для второго графа
-       /// </summary>
         private void btnClearSecondGraph_Click(object sender, RoutedEventArgs e)
         {
             csSecondGraph.Children.Clear();
@@ -164,22 +141,18 @@ namespace CompareGraphs
             _listSecondP.Clear();
         }
         #endregion
-        /// <summary>
         /// Сравнение графов по их харектеристике - живучесть
-        /// </summary>
         private void btnCompareGraphs_Click(object sender, RoutedEventArgs e)
         {
             if(_isSecondGraphInput && _isFirstGraphInput)
             {
                 if(_graphFirst == _graphSecond)
-                    MessageBox.Show("Graphs are equivalent");
+                    MessageBox.Show(string.Format("Graphs are equivalent {0} == {1}",_graphFirst.GetVitality(),_graphSecond.GetVitality()));
                 else
-                    MessageBox.Show("Graphs are not equivalent");
+                    MessageBox.Show(string.Format("Graphs are not equivalent {0} != {1}", _graphFirst.GetVitality(), _graphSecond.GetVitality()));
             }
         }
-        /// <summary>
         /// Подтверждение ввода данных для первого графа
-        /// </summary>
         private void btnOkFirstGraph_Click(object sender, RoutedEventArgs e)
         {
             var arrG = ConvertObservableToArray(_listFirstG);
@@ -211,9 +184,7 @@ namespace CompareGraphs
                 MessageBox.Show(ex.Message);
             }
         }
-        /// <summary>
         /// Подтверждение данный для второго графа
-        /// </summary>
         private void btnOkSecondGraph_Click(object sender, RoutedEventArgs e)
         {
             var arrG = ConvertObservableToArray(_listSecondG);
@@ -245,11 +216,7 @@ namespace CompareGraphs
             }
         }
 
-        /// <summary>
         /// Конвертирование List<Element> в int[] по свойству Value 
-        /// </summary>
-        /// <param name="list"></param>
-        /// <returns></returns>
         int[] ConvertObservableToArray(ObservableCollection<Element> list)
         {
             var array = new int[list.Count];
@@ -257,11 +224,7 @@ namespace CompareGraphs
                 array[i] = list[i].Value;
             return array;
         }
-        /// <summary>
         /// Обработка вводимого текста в ячейки таблицы
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void DgPreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (!Char.IsDigit(e.Text[e.Text.Length - 1]))
@@ -270,11 +233,7 @@ namespace CompareGraphs
                 e.Handled = true;
             }
         }
-        /// <summary>
         /// Изменение размера изображения 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             csFirstGraph.Children.Clear();
