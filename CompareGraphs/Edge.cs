@@ -2,7 +2,9 @@
 {
     public class Edge
     {
-      
+        public Edge()
+        {}
+
         public Edge(Vertex vertexStart, Vertex vertexEnd, int weight)
         {
             _vertexStart = vertexStart;

@@ -18,14 +18,11 @@ namespace CompareGraphs
         /// <summary>
         /// Визуализация графа
         /// </summary>
-        /// <param name="canvasPaintGraph"></param>
-        /// <param name="adjMatrix"></param>
         public static void PrintGraph(ref Canvas canvasPaintGraph, int[,] adjMatrix)
         {
             canvasPaintGraph.Children.Clear();
             var numberVertexes = (int)Math.Sqrt(adjMatrix.Length);
             _vertices = new Vertex[numberVertexes];
-            // Привязка вершин к координатам
             Coordinates(adjMatrix, (int)canvasPaintGraph.ActualWidth, (int)canvasPaintGraph.ActualHeight);
             Ribs(adjMatrix);
             _listPoint = new List<Ellipse>(_vertices.Length);
@@ -64,7 +61,6 @@ namespace CompareGraphs
         /// <summary>
         /// Нахождение всех ребер графа
         /// </summary>
-        /// <param name="adjMatrix"></param>
         private static void Ribs(int[,] adjMatrix)
         {
             _ribs = new List<Edge>();
@@ -80,9 +76,6 @@ namespace CompareGraphs
         /// <summary>
         /// Задание координат для вершин графа
         /// </summary>
-        /// <param name="adjMatrix"></param>
-        /// <param name="maxX"></param>
-        /// <param name="maxY"></param>
         private static void Coordinates(int[,] adjMatrix, int maxX, int maxY)
         {
             _radiusPoint = (int)(Math.Min(maxX, maxY)*0.05);
@@ -103,8 +96,6 @@ namespace CompareGraphs
         /// <summary>
         /// Конвертирует содержимое элемента в изображение
         /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
         public static ImageSource ToImageSource(FrameworkElement obj)
         {
             // Save current canvas transform

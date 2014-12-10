@@ -147,9 +147,11 @@ namespace CompareGraphs
             if(_isSecondGraphInput && _isFirstGraphInput)
             {
                 if(_graphFirst == _graphSecond)
-                    MessageBox.Show(string.Format("Graphs are equivalent {0} == {1}",_graphFirst.GetVitality(),_graphSecond.GetVitality()));
+                    MessageBox.Show(string.Format("Graphs are equivalent\nVitality {0} ==  {1}",
+                        _graphFirst.GetVitality(), _graphSecond.GetVitality()));
                 else
-                    MessageBox.Show(string.Format("Graphs are not equivalent {0} != {1}", _graphFirst.GetVitality(), _graphSecond.GetVitality()));
+                    MessageBox.Show(string.Format("Graphs are not equivalent\nVitality {0} != {1}"
+                                                  , _graphFirst.GetVitality(), _graphSecond.GetVitality()));
             }
         }
         /// Подтверждение ввода данных для первого графа
